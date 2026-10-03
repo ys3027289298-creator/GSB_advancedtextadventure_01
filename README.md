@@ -1,0 +1,2 @@
+# GSB_advancedtextadventure_01
+Clone of learntocodeGCSE/AdvancedTextAdventure
