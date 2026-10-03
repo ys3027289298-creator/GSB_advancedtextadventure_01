@@ -87,20 +87,31 @@ class boss (enemy):
     def setSuper(self, newSuperMove):
         self.superMove = newSuperMove
 
+def loadNames(fileName, fallback):
+    try:
+        with open(fileName, "r") as file:
+            names = []
+            for line in file:
+                name = line.strip()
+                if name != "":
+                    names.append(name)
+    except IOError:
+        names = []
+
+    if len(names) == 0:
+        names = [fallback]
+
+    return names
+
 def enemyGen(levelBoss):
-    temp = []
-    file = open("adjective.txt","r")
-    lines = file.readlines()
-    adjective = lines[random.randint(0,len(lines)-1)][:-1]
-    file.close
-    file = open("animal.txt","r")
-    lines = file.readlines()
-    animal = lines[random.randint(0,len(lines)-1)][:-1]
-    file.close
+    adjectives = loadNames("adjective.txt", "Mysterious")
+    animals = loadNames("animal.txt", "Stranger")
+    adjective = adjectives[random.randint(0,len(adjectives)-1)]
+    animal = animals[random.randint(0,len(animals)-1)]
 
     if levelBoss == False:
         health = random.randint(50,100)
-        attack = random.randint(1,10)
+        attack = random.randint(10,15)
         special = random.randint(10,20)
         chance = random.randint(1,10)
 
@@ -115,18 +126,19 @@ def enemyGen(levelBoss):
 
         return boss(health, attack, special, chance, adjective+" "+animal, superMove)
 
-levelBoss = True
+if __name__ == "__main__":
+    levelBoss = True
 
-en1 = enemyGen(levelBoss)
-en2 = enemyGen(levelBoss)
-en3 = enemyGen(levelBoss)
+    en1 = enemyGen(levelBoss)
+    en2 = enemyGen(levelBoss)
+    en3 = enemyGen(levelBoss)
 
 
-pprint(vars(en1))
+    pprint(vars(en1))
 
-pprint(vars(en2))
+    pprint(vars(en2))
 
-pprint(vars(en3))
+    pprint(vars(en3))
 
 
 

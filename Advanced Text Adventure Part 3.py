@@ -87,20 +87,31 @@ class boss (enemy):
     def setSuper(self, newSuperMove):
         self.superMove = newSuperMove
 
+def loadNames(fileName, fallback):
+    try:
+        with open(fileName, "r") as file:
+            names = []
+            for line in file:
+                name = line.strip()
+                if name != "":
+                    names.append(name)
+    except IOError:
+        names = []
+
+    if len(names) == 0:
+        names = [fallback]
+
+    return names
+
 def enemyGen(levelBoss):
-    temp = []
-    file = open("adjective.txt","r")
-    lines = file.readlines()
-    adjective = lines[random.randint(0,len(lines)-1)][:-1]
-    file.close
-    file = open("animal.txt","r")
-    lines = file.readlines()
-    animal = lines[random.randint(0,len(lines)-1)][:-1]
-    file.close
+    adjectives = loadNames("adjective.txt", "Mysterious")
+    animals = loadNames("animal.txt", "Stranger")
+    adjective = adjectives[random.randint(0,len(adjectives)-1)]
+    animal = animals[random.randint(0,len(animals)-1)]
 
     if levelBoss == False:
         health = random.randint(50,100)
-        attack = random.randint(1,10)
+        attack = random.randint(10,15)
         special = random.randint(10,20)
         chance = random.randint(1,10)
 
@@ -121,6 +132,8 @@ def enemyAttack(hitChance, attackValue, name, defence):
     if hitChance >= hit:
         print("it hits the hero!!!")
         loss = attackValue - defence
+        if loss < 0:
+            loss = 0
         print("You stagger losing...", loss, "health")
         return math.ceil(loss)
     else:
@@ -152,8 +165,16 @@ def loot(luck, genCharacter):
         tableNum = random.randint(0,4)
         lootTableList = ["items","ranged","defence","magic","attack"]
         itemType = lootTableList[tableNum]
-        file = open(itemType+".txt","r")
-        lines = file.readlines()
+        with open(itemType+".txt","r") as file:
+            lines = []
+            for line in file:
+                itemLine = line.strip()
+                if itemLine != "":
+                    lines.append(itemLine)
+
+        if len(lines) == 0:
+            print("NO LOOT FOR YOU!")
+            return
 
         print("The enemy dropped a....")
 
@@ -190,32 +211,33 @@ def loot(luck, genCharacter):
         else:
             
             if splitItemLine[2] == "luck":
-                genCharacter.setLuck(genCharacter.getLuck()+value)
+                genCharacter.setLuck(min(10, genCharacter.getLuck()+value))
                 print("Your new Luck  is...")
                 print(genCharacter.getLuck())
 
             elif splitItemLine[2] == "health":
-                genCharacter.setHealth(genCharacter.getLuck()+value)
+                genCharacter.setHealth(genCharacter.getHealth()+value)
                 print("Your new Health  is...")
                 print(genCharacter.getHealth())
 
                                      
                                     
-genCharacter = hero(100, 10, 11, 12, 1, 14, "LEE!")
+if __name__ == "__main__":
+    genCharacter = hero(100, 10, 11, 12, 1, 14, "LEE!")
 
 
-pprint(vars(genCharacter))
+    pprint(vars(genCharacter))
 
-loot(100,genCharacter)
-loot(100,genCharacter)
-loot(100,genCharacter)
-loot(100,genCharacter)
-loot(100,genCharacter)
-loot(100,genCharacter)
-loot(100,genCharacter)
-loot(100,genCharacter)
-loot(100,genCharacter)
+    loot(100,genCharacter)
+    loot(100,genCharacter)
+    loot(100,genCharacter)
+    loot(100,genCharacter)
+    loot(100,genCharacter)
+    loot(100,genCharacter)
+    loot(100,genCharacter)
+    loot(100,genCharacter)
+    loot(100,genCharacter)
 
-pprint(vars(genCharacter))
+    pprint(vars(genCharacter))
 
     

@@ -114,11 +114,11 @@ def createClass():
         c = input ("Are you more of an archer (1) or magic user (2)?...")
 
     
-    if a == "1":
+    if c == "1":
         heroRanged = 10
         heroMagic = 5
 
-    elif a == "2":
+    elif c == "2":
         heroRanged = 5
         heroMagic = 10
 
@@ -131,16 +131,27 @@ def createClass():
                 
 
 
+def loadNames(fileName, fallback):
+    try:
+        with open(fileName, "r") as file:
+            names = []
+            for line in file:
+                name = line.strip()
+                if name != "":
+                    names.append(name)
+    except IOError:
+        names = []
+
+    if len(names) == 0:
+        names = [fallback]
+
+    return names
+
 def enemyGen(levelBoss):
-    temp = []
-    file = open("adjective.txt","r")
-    lines = file.readlines()
-    adjective = lines[random.randint(0,len(lines)-1)][:-1]
-    file.close
-    file = open("animal.txt","r")
-    lines = file.readlines()
-    animal = lines[random.randint(0,len(lines)-1)][:-1]
-    file.close
+    adjectives = loadNames("adjective.txt", "Mysterious")
+    animals = loadNames("animal.txt", "Stranger")
+    adjective = adjectives[random.randint(0,len(adjectives)-1)]
+    animal = animals[random.randint(0,len(animals)-1)]
 
     if levelBoss == False:
         health = random.randint(50,100)
@@ -165,6 +176,8 @@ def enemyAttack(hitChance, attackValue, name, defence):
     if hitChance >= hit:
         print("it hits the hero!!!")
         loss = attackValue - defence
+        if loss < 0:
+            loss = 0
         print("You stagger losing...", loss, "health")
         return math.ceil(loss)
     else:
@@ -196,8 +209,16 @@ def loot(luck, genCharacter):
         tableNum = random.randint(0,4)
         lootTableList = ["items","ranged","defence","magic","attack"]
         itemType = lootTableList[tableNum]
-        file = open(itemType+".txt","r")
-        lines = file.readlines()
+        with open(itemType+".txt","r") as file:
+            lines = []
+            for line in file:
+                itemLine = line.strip()
+                if itemLine != "":
+                    lines.append(itemLine)
+
+        if len(lines) == 0:
+            print("NO LOOT FOR YOU!")
+            return
 
         print("The enemy dropped a....")
 
@@ -234,12 +255,12 @@ def loot(luck, genCharacter):
         else:
             
             if splitItemLine[2] == "luck":
-                genCharacter.setLuck(genCharacter.getLuck()+value)
+                genCharacter.setLuck(min(10, genCharacter.getLuck()+value))
                 print("Your new Luck  is...")
                 print(genCharacter.getLuck())
 
             elif splitItemLine[2] == "health":
-                genCharacter.setHealth(genCharacter.getLuck()+value)
+                genCharacter.setHealth(genCharacter.getHealth()+value)
                 print("Your new Health  is...")
                 print(genCharacter.getHealth())
 
@@ -247,11 +268,12 @@ def loot(luck, genCharacter):
 def gameOver(enemyDead):
     if enemyDead == True:
         print("Time for another battle!!!")
+        return True
 
     else:
         print("You are out health")
         print("Better luck next time!!")
-        exit()
+        return False
 
 def battle(genEnemy, genCharacter):
     print("Whats that coming over the hill?????")
@@ -284,7 +306,7 @@ def battle(genEnemy, genCharacter):
         hit = hitChance(genCharacter.getLuck())
 
         if hit == True:
-            genEnemy.setHealth(genEnemy.getHealth() - damage)
+            genEnemy.setHealth(max(0, genEnemy.getHealth() - damage))
             print("You've hit the enemy!!!")
             print("The Enemies health is now....", genEnemy.getHealth())
 
@@ -294,7 +316,7 @@ def battle(genEnemy, genCharacter):
         enemyDead = isDead(genEnemy.getHealth())
 
         if enemyDead == False:
-            genCharacter.setHealth(genCharacter.getHealth() - enemyAttack(genEnemy.getChance(), genEnemy.getAttack(), genEnemy.getName(), genCharacter.getDefence()))
+            genCharacter.setHealth(max(0, genCharacter.getHealth() - enemyAttack(genEnemy.getChance(), genEnemy.getAttack(), genEnemy.getName(), genCharacter.getDefence())))
             
             characterDead = isDead(genCharacter.getHealth())
 
@@ -326,7 +348,10 @@ def levelGenerator(character, level):
             levelBoss = False
 
         characterDead = battle(enemyGen(levelBoss), character)
-        gameOver(characterDead)
+        if gameOver(characterDead) == False:
+            return False
+
+    return True
 
 
 def main():
@@ -334,17 +359,22 @@ def main():
     character = hero(100, classData[0], classData[1], classData[2], classData[3], classData[4], classData[5])
     pprint(vars(character))
     print("Level 1...")
-    levelGenerator(character, 1)
+    if levelGenerator(character, 1) == False:
+        return
     print("Level 2...")
-    levelGenerator(character, 2)
+    if levelGenerator(character, 2) == False:
+        return
     print("Level 3...")
-    levelGenerator(character, 3)
+    if levelGenerator(character, 3) == False:
+        return
     print("Level 4...")
-    levelGenerator(character, 4)
+    if levelGenerator(character, 4) == False:
+        return
     print("YOU WON!!!!!")
     pprint(vars(character))
     
     
-main()
+if __name__ == "__main__":
+    main()
 
     
