@@ -114,11 +114,11 @@ def createClass():
         c = input ("Are you more of an archer (1) or magic user (2)?...")
 
     
-    if a == "1":
+    if c == "1":
         heroRanged = 10
         heroMagic = 5
 
-    elif a == "2":
+    elif c == "2":
         heroRanged = 5
         heroMagic = 10
 
@@ -131,16 +131,21 @@ def createClass():
                 
 
 
+def loadLines(fileName, fallback):
+    try:
+        with open(fileName,"r") as file:
+            lines = [line.strip() for line in file.readlines() if line.strip()]
+    except IOError:
+        lines = []
+    if len(lines) == 0:
+        return fallback
+    return lines
+
 def enemyGen(levelBoss):
-    temp = []
-    file = open("adjective.txt","r")
-    lines = file.readlines()
-    adjective = lines[random.randint(0,len(lines)-1)][:-1]
-    file.close
-    file = open("animal.txt","r")
-    lines = file.readlines()
-    animal = lines[random.randint(0,len(lines)-1)][:-1]
-    file.close
+    adjectives = loadLines("adjective.txt", ["Mysterious"])
+    animals = loadLines("animal.txt", ["Creature"])
+    adjective = adjectives[random.randint(0,len(adjectives)-1)]
+    animal = animals[random.randint(0,len(animals)-1)]
 
     if levelBoss == False:
         health = random.randint(50,100)
@@ -164,7 +169,7 @@ def enemyAttack(hitChance, attackValue, name, defence):
     hit = random.randint(0,10)
     if hitChance >= hit:
         print("it hits the hero!!!")
-        loss = attackValue - defence
+        loss = max(0, attackValue - defence)
         print("You stagger losing...", loss, "health")
         return math.ceil(loss)
     else:
@@ -196,10 +201,13 @@ def loot(luck, genCharacter):
         tableNum = random.randint(0,4)
         lootTableList = ["items","ranged","defence","magic","attack"]
         itemType = lootTableList[tableNum]
-        file = open(itemType+".txt","r")
-        lines = file.readlines()
+        lines = loadLines(itemType+".txt", [])
 
         print("The enemy dropped a....")
+
+        if len(lines) == 0:
+            print("NO LOOT FOR YOU!")
+            return
 
         item = random.randint(0,len(lines)-1)
 
@@ -239,7 +247,7 @@ def loot(luck, genCharacter):
                 print(genCharacter.getLuck())
 
             elif splitItemLine[2] == "health":
-                genCharacter.setHealth(genCharacter.getLuck()+value)
+                genCharacter.setHealth(genCharacter.getHealth()+value)
                 print("Your new Health  is...")
                 print(genCharacter.getHealth())
 
@@ -254,6 +262,11 @@ def gameOver(enemyDead):
         exit()
 
 def battle(genEnemy, genCharacter):
+    if isDead(genCharacter.getHealth()):
+        return False
+    if isDead(genEnemy.getHealth()):
+        return True
+
     print("Whats that coming over the hill?????")
     print("Its a...", genEnemy.getName(), "Looking for a fight!")
     print("Check out its stats....")
@@ -284,7 +297,7 @@ def battle(genEnemy, genCharacter):
         hit = hitChance(genCharacter.getLuck())
 
         if hit == True:
-            genEnemy.setHealth(genEnemy.getHealth() - damage)
+            genEnemy.setHealth(max(0, genEnemy.getHealth() - damage))
             print("You've hit the enemy!!!")
             print("The Enemies health is now....", genEnemy.getHealth())
 
@@ -294,7 +307,7 @@ def battle(genEnemy, genCharacter):
         enemyDead = isDead(genEnemy.getHealth())
 
         if enemyDead == False:
-            genCharacter.setHealth(genCharacter.getHealth() - enemyAttack(genEnemy.getChance(), genEnemy.getAttack(), genEnemy.getName(), genCharacter.getDefence()))
+            genCharacter.setHealth(max(0, genCharacter.getHealth() - enemyAttack(genEnemy.getChance(), genEnemy.getAttack(), genEnemy.getName(), genCharacter.getDefence())))
             
             characterDead = isDead(genCharacter.getHealth())
 
@@ -327,6 +340,8 @@ def levelGenerator(character, level):
 
         characterDead = battle(enemyGen(levelBoss), character)
         gameOver(characterDead)
+        if isDead(character.getHealth()):
+            return
 
 
 def main():

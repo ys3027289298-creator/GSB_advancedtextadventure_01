@@ -87,20 +87,25 @@ class boss (enemy):
     def setSuper(self, newSuperMove):
         self.superMove = newSuperMove
 
+def loadLines(fileName, fallback):
+    try:
+        with open(fileName,"r") as file:
+            lines = [line.strip() for line in file.readlines() if line.strip()]
+    except IOError:
+        lines = []
+    if len(lines) == 0:
+        return fallback
+    return lines
+
 def enemyGen(levelBoss):
-    temp = []
-    file = open("adjective.txt","r")
-    lines = file.readlines()
-    adjective = lines[random.randint(0,len(lines)-1)][:-1]
-    file.close
-    file = open("animal.txt","r")
-    lines = file.readlines()
-    animal = lines[random.randint(0,len(lines)-1)][:-1]
-    file.close
+    adjectives = loadLines("adjective.txt", ["Mysterious"])
+    animals = loadLines("animal.txt", ["Creature"])
+    adjective = adjectives[random.randint(0,len(adjectives)-1)]
+    animal = animals[random.randint(0,len(animals)-1)]
 
     if levelBoss == False:
         health = random.randint(50,100)
-        attack = random.randint(1,10)
+        attack = random.randint(10,15)
         special = random.randint(10,20)
         chance = random.randint(1,10)
 
